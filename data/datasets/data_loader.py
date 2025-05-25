@@ -41,6 +41,59 @@ def clean_column_names(columns):
 
     return cleaned_columns
 
+def convert_time_to_minutes(text):
+    """
+    Convert duration formats (e.g., '2h 15m', '90mins', '01:30', '2hours')
+    or pandas Timedelta/datetime objects into minutes.
+    Returns None if unable to parse.
+    """
+    if pd.isna(text) or text in ("", "nan", "None"): return None
+    if isinstance(text, pd.Timedelta): return text.total_seconds() / 60
+    if isinstance(text, (datetime.datetime, datetime.time)):
+        return text.hour * 60 + text.minute + text.second / 60
+    text = str(text).strip().lower()
+
+    # Support "01:30" or "1:30:15"
+    m = re.match(r"^(\d+):(\d+)(?::(\d+))?$", text)
+    if m:
+        h, m_, s = (int(x) if x else 0 for x in m.groups())
+        return h * 60 + m_ + s / 60
+
+    # Support formats like "2h 15m", "2hr 15min", "2 hours 15 minutes", "3hrs", "2 hour"
+    m = re.match(r"^(\d+)\s*(h|hr|hrs|hour|hours)(?:\s*(\d+)\s*(m|min|mins|minute|minutes))?$", text)
+    if m:
+        h = int(m.group(1))
+        m_ = int(m.group(3)) if m.group(3) else 0
+        return h * 60 + m_
+
+    # Support "90min", "90mins", "90 minutes"
+    m = re.match(r"^(\d+)\s*(m|min|mins|minute|minutes)$", text)
+    if m:
+        return int(m.group(1))
+
+    # Pure digits
+    if text.isdigit(): return int(text)
+    return None
+
+def parse_target(row, direct_time_col, drive_time_col, days_col):
+    """
+    Parse the total install duration (excluding drive time) in minutes.
+    Formula: total_install_time = total_direct_time - 2 * drive_time * days_on_site
+    """
+    total_direct = row[direct_time_col]
+    drive_time = row[drive_time_col] if drive_time_col in row else 0
+    days = row[days_col] if days_col in row else 1
+
+    # Convert all to minutes
+    total_direct_min = convert_time_to_minutes(total_direct)
+    drive_time_min = convert_time_to_minutes(drive_time)
+    days_val = float(days) if not pd.isna(days) else 1
+
+    if total_direct_min is None:
+        return None
+    install_time = total_direct_min - 2 * drive_time_min * days_val
+    return install_time
+
 
 def load_data (file_path = None, debug_dir="./checkpoints", target_colum = None, verbose = True):
     """
@@ -88,7 +141,7 @@ def load_data (file_path = None, debug_dir="./checkpoints", target_colum = None,
     ]
 
     df["Total Install Time (Excluding Drive)"] = df.apply(
-        #lambda r: parse_target(r, direct_time_col, drive_time_col, days_col), axis=1
+        lambda r: parse_target(r, direct_time_col, drive_time_col, days_col), axis=1
     )
     target = "Total Install Time (Excluding Drive)"
     debug_df = df[[direct_time_col, drive_time_col, days_col, target]].copy()
