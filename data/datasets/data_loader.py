@@ -170,26 +170,43 @@ def load_data (file_path = None, debug_dir="./checkpoints", target_colum = None,
         if ang_col in df.columns:
             df[ang_col] = df[ang_col].apply(clean_angle)
 
-    #Select features
+    # Select features
     features = [c for c in df.columns if c not in exclude + [target]]
 
-    #Normalize common binary fields
+    # Normalize common binary fields
     binary_fields = ["Squirrel Screen", "Consumption Monitoring", "Reinforcements"]
     for field in binary_fields:
         if field in df.columns:
             df[field] = df[field].apply(lambda x: "Yes" if str(x).lower() in ["1", "yes", "true"] else "No")
 
-    #Factorize all categorical (object-type) columns
-    cat_cols = df[features].select_dtypes(include=["object"]).columns
-    category_mappings = {}
-    for c in cat_cols:
-        labels, uniques = pd.factorize(df[c].astype(str))
-        df[c] = labels + 1
-        category_mappings[c] = list(uniques.astype(str))
+    # One-hot encode all categorical features
+    cat_cols = df[features].select_dtypes(include=["object"]).columns.tolist()
+    category_options = {col: sorted(df[col].dropna().unique().tolist()) for col in cat_cols}
+    df_onehot = pd.get_dummies(df[features], columns=cat_cols, dummy_na=False)
 
-    #Fill missing values (numerical with 0, categorical with mode)
-    for col in features:
-        if df[col].dtype == "O":  # object
-            df[col] = df[col].fillna(df[col].mode()[0])
-        else:
-            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+    # Fill missing numerical values with 0 (categorical handled by get_dummies)
+    for col in df_onehot.columns:
+        if df_onehot[col].dtype in ["float64", "int64"]:
+            df_onehot[col] = pd.to_numeric(df_onehot[col], errors="coerce").fillna(0)
+
+    # Standardization
+    scaler = StandardScaler()
+    X = scaler.fit_transform(df_onehot)
+    X_df = pd.DataFrame(X, columns=df_onehot.columns)
+    y = df[target]
+
+    # Save option list for each original categorical column (for future input UI)
+    import json
+    with open(os.path.join(debug_dir, "category_options.json"), "w", encoding="utf-8") as f:
+        json.dump(category_options, f, ensure_ascii=False, indent=2)
+
+    if verbose:
+        print("One-hot encoded columns:", df_onehot.columns.tolist())
+        print("Original category options for UI/inputs:", category_options)
+        print("Data loading and preprocessing complete. Feature count:", len(X_df.columns))
+        print(X_df.head(2))
+        print("Sample targets: \n", y.head(2))
+    return X_df, y, category_options
+
+# Usage example:
+# X_df, y, category_options = load_data("your_file.xlsx")
