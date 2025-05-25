@@ -41,6 +41,24 @@ def clean_column_names(columns):
 
     return cleaned_columns
 
+def clean_angle(value):
+    """
+    Parse roof angle or azimuth values from various formats such as '30°' or '30/25'.
+    If value contains '/', takes the mean; otherwise attempts direct float conversion.
+    Returns NaN on failure.
+    """
+    if pd.isna(value): return np.nan
+    value = str(value).replace("°", "").strip()
+    if "/" in value:
+        try:
+            return np.mean([float(v) for v in value.split("/")])
+        except ValueError:
+            return np.nan
+    try:
+        return float(value)
+    except ValueError:
+        return np.nan
+
 def convert_time_to_minutes(text):
     """
     Convert duration formats (e.g., '2h 15m', '90mins', '01:30', '2hours')
@@ -146,3 +164,32 @@ def load_data (file_path = None, debug_dir="./checkpoints", target_colum = None,
     target = "Total Install Time (Excluding Drive)"
     debug_df = df[[direct_time_col, drive_time_col, days_col, target]].copy()
     debug_df.to_excel(os.path.join(debug_dir, "target_processing_debug.xlsx"))
+
+    #Clean angle columns
+    for ang_col in ["Tilt", "Azimuth"]:
+        if ang_col in df.columns:
+            df[ang_col] = df[ang_col].apply(clean_angle)
+
+    #Select features
+    features = [c for c in df.columns if c not in exclude + [target]]
+
+    #Normalize common binary fields
+    binary_fields = ["Squirrel Screen", "Consumption Monitoring", "Reinforcements"]
+    for field in binary_fields:
+        if field in df.columns:
+            df[field] = df[field].apply(lambda x: "Yes" if str(x).lower() in ["1", "yes", "true"] else "No")
+
+    #Factorize all categorical (object-type) columns
+    cat_cols = df[features].select_dtypes(include=["object"]).columns
+    category_mappings = {}
+    for c in cat_cols:
+        labels, uniques = pd.factorize(df[c].astype(str))
+        df[c] = labels + 1
+        category_mappings[c] = list(uniques.astype(str))
+
+    #Fill missing values (numerical with 0, categorical with mode)
+    for col in features:
+        if df[col].dtype == "O":  # object
+            df[col] = df[col].fillna(df[col].mode()[0])
+        else:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
