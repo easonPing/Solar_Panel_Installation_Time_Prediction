@@ -206,6 +206,7 @@ def load_data (file_path = None, debug_dir="./checkpoints", target_colum = None,
         print("Data loading and preprocessing complete. Feature count:", len(X_df.columns))
         print(X_df.head(2))
         print("Sample targets: \n", y.head(2))
+        print()
     return X_df, y, category_options
 
 # Usage example:

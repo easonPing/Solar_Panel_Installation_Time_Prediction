@@ -51,20 +51,10 @@ class LinearRegressionModel:
         """
         self.model = joblib.load(path)
 
-    def get_coefficients(self, feature_names=None):
-        """
-        Return the model coefficients (and intercept) as a dict.
-        If feature_names is provided, returns a mapping from name to coef.
-        """
-        if hasattr(self.model, "coef_"):
-            if feature_names is not None:
-                return dict(zip(feature_names, self.model.coef_))
-            return self.model.coef_
-        else:
-            return None
+    @property
+    def coef_(self):
+        return getattr(self.model, "coef_", None)
 
-    def get_intercept(self):
-        """
-        Return the model intercept.
-        """
+    @property
+    def intercept_(self):
         return getattr(self.model, "intercept_", None)

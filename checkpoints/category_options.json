@@ -1,0 +1,78 @@
+{
+  "Inverter Manufacturer": [
+    "Enphase",
+    "GoodWe",
+    "SMA",
+    "SolarEdge"
+  ],
+  "Array Type": [
+    "Ground Mount",
+    "Roof Mount"
+  ],
+  "Squirrel Screen": [
+    "No",
+    "Yes"
+  ],
+  "Consumption Monitoring": [
+    "No",
+    "Yes"
+  ],
+  "Truss / Rafter": [
+    "Grount Mount",
+    "Purlin",
+    "Rafter",
+    "TJI",
+    "Truss"
+  ],
+  "Reinforce- ments": [
+    "No",
+    "Yes"
+  ],
+  "Rough Electrical Inspection": [
+    "No",
+    "Yes"
+  ],
+  "Interconnection Type": [
+    "A*",
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "B*",
+    "B1",
+    "B2",
+    "C*",
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "Roof Type": [
+    "Ag Metal",
+    "Asphalt Shingles",
+    "EPDM (Flat Roof)",
+    "Ground Mount",
+    "Standing Seam Metal Roof"
+  ],
+  "Attachment Type": [
+    "Ejot",
+    "Flashfoot 2",
+    "Flashloc RM",
+    "Flashview",
+    "Ground Mount",
+    "Hugs",
+    "RT Mini",
+    "S-5!",
+    "Unknown"
+  ],
+  "Portrait / Landscape": [
+    "Both",
+    "Landscape",
+    "Portrait"
+  ],
+  "Install Season": [
+    "Fall",
+    "Spring",
+    "Summer",
+    "Winter"
+  ]
+}
