@@ -1,5 +1,5 @@
 from data.datasets.data_loader import load_data
-from models.linear_regression.linear_model import LinearRegressionModel
+from models.linear_regression.linear_model_sklearn import LinearRegressionModel
 from sklearn.model_selection import train_test_split
 from utils.visualization import plot_pred_vs_true, print_metrics
 

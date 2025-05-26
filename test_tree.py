@@ -1,13 +1,13 @@
 
 from data.datasets.data_loader import load_data
-from models.tree.tree_model import TreeRegressionModel
-from utils.visualization import print_metrics, plot_pred_vs_true
+from models.tree.tree_model_sklearn import TreeRegressionModel
+from utils.visualization import print_metrics, plot_pred_vs_true, print_compliance_stats_with_xdf
 
 X_df, y, _ = load_data("data/raw_data/UPDATED Dataset - Predictive Tool Development for Residential Solar Installation Duration - REV1.xlsx")  # 填写你的数据路径
 
 from sklearn.model_selection import train_test_split
 
-X_train, X_val, y_train, y_val = train_test_split(X_df, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_df, y, test_size=0.2, random_state=42)
 
 model_types = ["decision_tree", "random_forest", "gbdt"]
 
@@ -18,9 +18,10 @@ for method in model_types:
     else:
         model = TreeRegressionModel(method=method, n_estimators=100, max_depth=8, min_samples_leaf=3)
     model.train(X_train, y_train)
-    y_pred = model.predict(X_val)
-    print_metrics(y_val, y_pred, model=model.model, feature_names=X_df.columns)
-    plot_pred_vs_true(y_val, y_pred, title=f"{method} Predicted vs. True")
+    y_pred = model.predict(X_test)
+    print_metrics(y_test, y_pred, model=model.model, feature_names=X_df.columns)
+    plot_pred_vs_true(y_test, y_pred, title=f"{method} Predicted vs. True")
+    print_compliance_stats_with_xdf(y_test, y_pred, X_test)
 
     importances = model.feature_importances_
     if importances is not None:

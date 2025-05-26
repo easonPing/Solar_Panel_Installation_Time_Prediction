@@ -49,3 +49,27 @@ def print_metrics(y_true, y_pred, model = None, feature_names=None, topn_coef=10
         print("Intercept:", intercept)
     else:
         print("No intercept found in this model.")
+
+def print_compliance_stats_with_xdf(y_true, y_pred, X_test, max_over=120, employee_col="Total # Hourly Employees on Site"):
+    """
+    Print the number and proportion of samples that satisfy:
+    - No underestimation (predicted >= true)
+    - Overestimation does NOT exceed max_over minutes per hourly employee
+
+    x_test: containing 'Total # Hourly Employees on Site' as a column.
+    max_over: maximum allowed overestimate per employee, in minutes (default 120 = 2 hours)
+    employee_col: name of the hourly employees column in X_df
+
+    Output: number and ratio of compliant samples.
+    """
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+    n_employees = np.array(X_test[employee_col])
+    not_under = y_pred >= y_true
+    not_over = (y_pred - y_true) <= (n_employees * max_over)
+    compliant = not_under & not_over
+    num_compliant = compliant.sum()
+    total = len(y_true)
+    print(f"Compliant predictions: {num_compliant}/{total} ({num_compliant/total:.1%})")
+    print(f"- No underestimation, and overestimation ≤ {max_over} min per hourly employee.")
+    return num_compliant, total, compliant

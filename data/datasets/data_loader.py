@@ -147,7 +147,6 @@ def load_data (file_path = None, debug_dir="./checkpoints", target_colum = None,
     exclude = [
         "Project ID",
         "Total # of Days on Site",
-        "Total # Hourly Employees on Site",
         "Estimated # of Salaried Employees on Site",
         "Estimated Salary Hours",
         "Estimated Total Direct Time",
