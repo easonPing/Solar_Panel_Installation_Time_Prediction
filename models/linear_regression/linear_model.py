@@ -1,5 +1,5 @@
 import joblib
-from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, RidgeCV, LassoCV
 
 class LinearRegressionModel:
     """
@@ -7,16 +7,23 @@ class LinearRegressionModel:
     Provides train, predict, score, save, and load methods.
     """
 
-    def __init__(self, method="linear", alpha=1.0):
+    def __init__(self, method="linear", alpha=0.2, auto_alpha=False, alphas=None, cv=5):
         """
-        Initialize the linear model.
-        method: 'linear', 'ridge', or 'lasso'
-        alpha: regularization parameter for Ridge/Lasso
+        method: 'linear', 'ridge', 'lasso'
+        auto_alpha: if True, use LassoCV or RidgeCV to tune alpha automatically
+        alphas: list or array of candidate alphas to search
+        cv: number of folds for cross-validation
         """
         if method == "ridge":
-            self.model = Ridge(alpha=alpha)
+            if auto_alpha:
+                self.model = RidgeCV(alphas=alphas, cv=cv, store_cv_values=True)
+            else:
+                self.model = Ridge(alpha=alpha)
         elif method == "lasso":
-            self.model = Lasso(alpha=alpha)
+            if auto_alpha:
+                self.model = LassoCV(alphas=alphas, cv=cv)
+            else:
+                self.model = Lasso(alpha=alpha)
         else:
             self.model = LinearRegression()
 
